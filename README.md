@@ -8,6 +8,8 @@ The schema for the database can be found in `database-setup/init.sql`
 2. Run `docker-compose up -d` in root directory of this repo.
 
 **Interacting with the Database**
+
+
 You can interact with the database in MySQL interactive mode in your command line with:
 `docker exec -it uf-athletics-databank-dev mysql -uroot -proot -A UF_Athletics_Databank`
 
@@ -45,7 +47,11 @@ cursor.close()
 conn.close()
 ```
 **Closing the database**
+
+
 To stop the database, run `docker stop uf-athletics-databank-dev` to stop the docker container.
 
 **Resetting the database**
+
+
 To reset the database, run `docker-compose down -v`, then `docker-compose up -d`
