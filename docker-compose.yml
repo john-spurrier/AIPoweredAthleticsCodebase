@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:latest
+    container_name: uf-athletics-databank-dev
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: UF_Athletics_Databank
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database-setup/init.sql:/docker-entrypoint-initdb.d/init.sql
