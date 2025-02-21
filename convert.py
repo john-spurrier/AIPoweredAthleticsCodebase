@@ -7,6 +7,8 @@ def load_json(file_path):
 
 def json_to_dataframe(data):
     dataframes = {}
+
+
     
     dataframes["Athletes"] = pd.DataFrame([
         {
@@ -17,15 +19,8 @@ def json_to_dataframe(data):
             "Home State": athlete.get("home_state", ""),
             "Home Town: ": athlete.get("home_town", ""),
             "High School: ": athlete.get("highschool", ""),
-            "Jersey": athlete.get("jersey", ""),
             "Date of Birth": athlete.get("date_of_birth_date", ""),
             "Year of Birth": athlete.get("year_of_birth_date", ""),
-            "Velocity Max": athlete.get("velocity_max", None),
-            "Acceleration Max": athlete.get("acceleration_max", None),
-            "Heart Rate Max": athlete.get("heart_rate_max", None),
-            "Player Load Max": athlete.get("player_load_max", None),
-            "Team ID": athlete.get("current_team_id", ""),
-            "Position": athlete.get("position_name", ""),
             "Is Current": True
         }
         for athlete in data.get("athletes", [])
@@ -107,8 +102,54 @@ def json_to_dataframe(data):
     ])
 
     dataframes["Modalities"] = pd.DataFrame()
-    dataframes["Athlete Metadata"] = pd.DataFrame()
-    
+    dataframes["Athlete Metadata"] = pd.DataFrame([
+        {
+            "Athlete UUID": athlete["id"],
+            "Sex": athlete.get("gender", ""),
+            "Jersey": athlete.get("jersey", ""),
+            "Velocity Max": athlete.get("velocity_max", None),
+            "Acceleration Max": athlete.get("acceleration_max", None),
+            "Heart Rate Max": athlete.get("heart_rate_max", None),
+            "Player Load Max": athlete.get("player_load_max", None),
+            "Weight": athlete.get("weight", None),
+            "Height": athlete.get("height", None),
+            "Age": athlete.get("age", None),
+            "Team ID": athlete.get("current_team_id", ""),
+            "Position": athlete.get("position_name", ""),
+            "Is Current": True
+        }
+        for athlete in data.get("athletes", [])
+    ])
+
+    dataframes["Medical"] = pd.DataFrame([
+        {
+            "Medical Record ID": record["id"],
+            "Athlete UUID": record["athlete_uuid"],
+            "Date": record["date"],
+            "Record": record["record"]
+        }
+        for record in data.get("medical_records", [])
+    ])
+
+    dataframes["Academic Records"] = pd.DataFrame([
+        {
+            "Academic Record ID": record["id"],
+            "Athlete UUID": record["athlete_uuid"],
+            "Date": record["date"],
+            "Record": record["record"]
+        }
+        for record in data.get("academic_records", [])
+    ])
+
+    dataframes["Consent"] = pd.DataFrame([
+        {
+            "Record ID": record["id"],
+            "Athlete UUID": record["athlete_uuid"],
+            "Consent Status": record["consent_status"]
+        }
+        for record in data.get("consent", [])
+    ])
+
     return dataframes
 
 def export_to_json(dataframes, output_path):
