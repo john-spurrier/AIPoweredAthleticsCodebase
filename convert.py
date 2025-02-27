@@ -13,6 +13,9 @@ def load_json(file_path):
     with open(file_path, "r") as file:
         return json.load(file)
 
+def load_csv(csv_path):
+    return pd.read_csv(csv_path)
+
 def coalesce_rows(group: pd.DataFrame) -> pd.Series:
     # For each column in the group, pick the first non-empty value.
     # (Non-empty meaning not NaN and not an empty string.)
@@ -39,6 +42,20 @@ def coalesce_df(df: pd.DataFrame, key_col: str) -> pd.DataFrame:
     return df_coalesced
 
 def json_to_dataframe(data):
+
+    df_csv = load_csv("Catapult/dummy_ids.csv").fillna("")
+
+    csv_lookup = {}
+    for _, row in df_csv.iterrows():
+        # Make a key from the CSV row's first & last name in lowercase
+        key = (str(row["First Name"]).strip().lower(), str(row["Last Name"]).strip().lower())
+        csv_lookup[key] = {
+            "is_current": row.get("is_current", ""),
+            "Catapult ID": row.get("Catapult ID", ""),
+            "VALD ID": row.get("VALD ID", ""),
+            "UFID": row.get("UFID", "")
+        }
+
     athlete_uuid_map = {}  # Dictionary to track unique athletes
     all_athletes = []
     
@@ -49,6 +66,8 @@ def json_to_dataframe(data):
         athlete_key = (first_name.lower(), last_name.lower())
         if athlete_key not in athlete_uuid_map:
             athlete_uuid_map[athlete_key] = generate_uuid(first_name, last_name)
+
+        csv_info = csv_lookup.get(athlete_key, {})    
         
         all_athletes.append({
             "Athlete UUID": athlete_uuid_map[athlete_key],
@@ -60,8 +79,7 @@ def json_to_dataframe(data):
             "High School": athlete.get("highschool", ""),
             "Date of Birth": athlete.get("date_of_birth_date", ""),
             "Year of Birth": athlete.get("year_of_birth_date", ""),
-            "Source": "Catapult",
-            "Is Current": True
+            "Is Current": csv_info.get("is_current", "")
         })
     
     # ForceDecks
@@ -71,6 +89,8 @@ def json_to_dataframe(data):
         athlete_key = (first_name.lower(), last_name.lower())
         if athlete_key not in athlete_uuid_map:
             athlete_uuid_map[athlete_key] = generate_uuid(first_name, last_name)
+
+        csv_info = csv_lookup.get(athlete_key, {})    
         
         all_athletes.append({
             "Athlete UUID": athlete_uuid_map[athlete_key],
@@ -82,8 +102,7 @@ def json_to_dataframe(data):
             "High School": "",
             "Date of Birth": "",
             "Year of Birth": "",
-            "Source": "ForceDecks",
-            "Is Current": True
+            "Is Current": csv_info.get("is_current", "")
         })
     
     # Build raw df of partial athlete info
@@ -92,6 +111,20 @@ def json_to_dataframe(data):
     dataframes = {}
     
     dataframes["Athletes"] = df_athletes_raw
+
+    ids_rows = []
+    for ath in all_athletes:
+        # Use the (fn, ln) lowercase key to find IDs in CSV
+        key = (ath["First Name"].lower(), ath["Last Name"].lower())
+        csv_info = csv_lookup.get(key, {})
+        ids_rows.append({
+            "Athlete UUID": ath["Athlete UUID"],
+            "Catapult ID": csv_info.get("Catapult ID", ""),
+            "VALD ID": csv_info.get("VALD ID", ""),
+            "UF ID": csv_info.get("UFID", "")
+        })
+    
+    dataframes["IDs"] = pd.DataFrame(ids_rows)
 
     dataframes["Teams"] = pd.DataFrame(list({
         athlete["teamId"]: {
@@ -267,8 +300,9 @@ def json_to_dataframe(data):
         "Medical": "Medical Record ID",
         "Academic Records": "Academic Record ID",
         "Consent": "Record ID"
-        # "Modalities": <whatever ID column you need, if any>
     }
+
+    dataframes["IDs"] = dataframes["IDs"].drop_duplicates()
     
     for df_name, df_obj in dataframes.items():
         key_col = coalesce_map.get(df_name)
