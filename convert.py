@@ -69,6 +69,9 @@ def json_to_dataframe(data):
 
         csv_info = csv_lookup.get(athlete_key, {})    
         
+        date_of_birth = athlete.get("date_of_birth_date", "").strip()
+        year_of_birth = date_of_birth[:4] if date_of_birth else athlete.get("year_of_birth_date", "").strip()
+        
         all_athletes.append({
             "Athlete UUID": athlete_uuid_map[athlete_key],
             "First Name": first_name,
@@ -77,8 +80,8 @@ def json_to_dataframe(data):
             "Home State": athlete.get("home_state", ""),
             "Home Town": athlete.get("home_town", ""),
             "High School": athlete.get("highschool", ""),
-            "Date of Birth": athlete.get("date_of_birth_date", ""),
-            "Year of Birth": athlete.get("year_of_birth_date", ""),
+            "Date of Birth": date_of_birth,
+            "Year of Birth": year_of_birth,
             "Is Current": csv_info.get("is_current", "")
         })
     
@@ -114,7 +117,6 @@ def json_to_dataframe(data):
 
     ids_rows = []
     for ath in all_athletes:
-        # Use the (fn, ln) lowercase key to find IDs in CSV
         key = (ath["First Name"].lower(), ath["Last Name"].lower())
         csv_info = csv_lookup.get(key, {})
         ids_rows.append({
